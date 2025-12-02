@@ -1,0 +1,28 @@
+-- Insert sample partners (partenaires)
+INSERT INTO public.partenaires (name, description, country, logo_url, website_url, rating, is_active) VALUES
+('StudyAbroad Global', 'Leader mondial dans l''accompagnement des étudiants internationaux vers les meilleures universités', 'États-Unis', 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=200', 'https://example.com', 4.8, true),
+('EduConseil France', 'Cabinet de conseil spécialisé dans les bourses d''études européennes et africaines', 'France', 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=200', 'https://example.com', 4.6, true),
+('Scholarship Connect', 'Plateforme de mise en relation entre étudiants et organismes de bourses', 'Canada', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200', 'https://example.com', 4.9, true),
+('Africa Education Hub', 'Organisation dédiée à l''accès aux bourses pour les étudiants africains', 'Sénégal', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200', 'https://example.com', 4.7, true),
+('Global Merit Foundation', 'Fondation internationale offrant des bourses d''excellence académique', 'Royaume-Uni', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200', 'https://example.com', 4.5, true);
+
+-- Insert sample products (produits_affiliation)
+INSERT INTO public.produits_affiliation (nom, description, categorie, prix, image_url, lien_affiliation, note, populaire, source) VALUES
+('Guide Complet des Bourses 2025', 'E-book exhaustif avec plus de 500 bourses d''études détaillées et stratégies d''application', 'books', 29.99, 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400', 'https://example.com/affiliate/guide-bourses', 4.8, true, 'Amazon'),
+('Formation: Rédaction de Lettre de Motivation', 'Masterclass en ligne pour créer des lettres de motivation qui font la différence', 'courses', 79.99, 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400', 'https://example.com/affiliate/formation-lettre', 4.9, true, 'Udemy'),
+('Kit Étudiant International Premium', 'Ensemble complet d''outils et templates pour candidatures internationales', 'software', 49.99, 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400', 'https://example.com/affiliate/kit-etudiant', 4.6, false, 'Gumroad'),
+('Préparation TOEFL/IELTS', 'Plateforme de préparation aux tests d''anglais avec exercices et simulations', 'courses', 99.99, 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400', 'https://example.com/affiliate/prep-toefl', 4.7, true, 'Coursera'),
+('Calculateur Financier Étudiant', 'Application pour gérer votre budget d''étudiant à l''étranger', 'software', 19.99, 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400', 'https://example.com/affiliate/calculateur', 4.5, false, 'AppStore'),
+('Assurance Santé Étudiants', 'Couverture santé complète pour étudiants internationaux', 'services', 299.99, 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400', 'https://example.com/affiliate/assurance', 4.8, true, 'DirectAssurance'),
+('Coaching Admission MBA', 'Accompagnement personnalisé pour admission dans les meilleurs MBA', 'services', 499.99, 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400', 'https://example.com/affiliate/coaching-mba', 4.9, false, 'MBAAdmit'),
+('Pack Documents Certifiés', 'Service de traduction et certification de documents académiques', 'services', 149.99, 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400', 'https://example.com/affiliate/traduction', 4.6, false, 'TranslateNow');
+
+-- Insert sample testimonials (temoignages)
+INSERT INTO public.temoignages (name, content, country, avatar_url, rating, is_approved, scholarship_name) VALUES
+('Aminata Diallo', 'Grâce à cette plateforme, j''ai obtenu une bourse complète pour mon Master en France. Le processus était clair et le support excellent !', 'Sénégal', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', 5, true, 'Bourse Excellence-Major'),
+('Jean-Baptiste Kouassi', 'J''ai trouvé ma bourse d''études au Canada en moins d''un mois. Les recommandations personnalisées ont fait toute la différence.', 'Côte d''Ivoire', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 5, true, 'Programme Fulbright'),
+('Fatima El Amrani', 'Une plateforme révolutionnaire ! J''ai pu comparer plusieurs bourses et choisir celle qui correspondait le mieux à mon profil.', 'Maroc', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', 4, true, 'Erasmus Mundus'),
+('Mohamed Traoré', 'Le chatbot IA m''a aidé à préparer mon dossier en répondant à toutes mes questions. Aujourd''hui je suis en doctorat en Allemagne !', 'Mali', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', 5, true, 'DAAD Scholarship'),
+('Sarah Nkrumah', 'Interface intuitive et bourses mises à jour régulièrement. J''ai reçu trois offres de bourses grâce à leurs conseils.', 'Ghana', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', 5, true, 'Commonwealth Scholarship'),
+('Ibrahim Soumaré', 'Excellent service ! Les filtres de recherche m''ont permis de trouver exactement les bourses qui correspondaient à mes critères.', 'Guinée', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150', 4, true, 'Chevening Scholarship'),
+('Aïcha Dembélé', 'Très professionnels et réactifs. Leur marketplace de produits éducatifs m''a aussi beaucoup aidée dans ma préparation.', 'Burkina Faso', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 5, true, 'Bourse Eiffel');

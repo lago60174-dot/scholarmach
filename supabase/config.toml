@@ -1,0 +1,19 @@
+project_id = "soxgicvobtfnzfdybwjx"
+
+[functions.scrape-scholarships]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
+
+[functions.get-recommendations]
+verify_jwt = true
+
+[functions.send-notification-email]
+verify_jwt = true
+
+[functions.send-deadline-reminders]
+verify_jwt = false
+
+[functions.notify-new-scholarship]
+verify_jwt = false
