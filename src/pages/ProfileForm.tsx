@@ -1,315 +1,292 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { GraduationCap, Menu, X, User, LogOut, LayoutDashboard, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { User as SupabaseUser } from "@supabase/supabase-js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sun, Moon } from "lucide-react";
 
-export default function ProfileForm() {
+export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    full_name: "",
-    age: "",
-    origin_country: "",
-    target_country: "",
-    field_of_study: "",
-    education_level: "undergraduate" as "undergraduate" | "high_school" | "masters" | "phd" | "postdoc",
-    gpa: "",
-    scholarship_type: "merit" as "merit" | "full" | "partial" | "travel" | "research" | "need_based",
-    finance_type: "",
-  });
+   const [dark, setDark] = useState(false);
+  const changeTheme = (()=>{
+    if(dark === false){
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme','dark');
+      setDark(true);
+    }else{
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme','light');
+      setDark(false);
+    }
+  })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        toast.error("Please sign in first");
-        navigate("/auth");
-        return;
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
+        fetchUnreadCount(session.user.id);
       }
-      setUserId(session.user.id);
-      
-      // Load existing profile
-      supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single()
-        .then(({ data }) => {
-          if (data) {
-            setFormData({
-              full_name: data.full_name || "",
-              age: data.age?.toString() || "",
-              origin_country: data.origin_country || "",
-              target_country: data.target_country || "",
-              field_of_study: data.field_of_study || "",
-              education_level: (data.education_level || "undergraduate") as "undergraduate" | "high_school" | "masters" | "phd" | "postdoc",
-              gpa: data.gpa?.toString() || "",
-              scholarship_type: (data.scholarship_type || "merit") as "merit" | "full" | "partial" | "travel" | "research" | "need_based",
-              finance_type: data.finance_type || "",
-            });
-          }
-        });
     });
-  }, [navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step !== 3) {
-      // Prevent form submission if not on final step
-      return;
-    }
-    if (!userId) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
+        fetchUnreadCount(session.user.id);
+      } else {
+        setIsAdmin(false);
+        setUnreadCount(0);
+      }
+    });
 
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: formData.full_name,
-          age: parseInt(formData.age),
-          origin_country: formData.origin_country,
-          target_country: formData.target_country,
-          field_of_study: formData.field_of_study,
-          education_level: formData.education_level,
-          gpa: parseFloat(formData.gpa),
-          scholarship_type: formData.scholarship_type,
-          finance_type: formData.finance_type,
-        })
-        .eq("id", userId);
+    return () => subscription.unsubscribe();
+  }, []);
 
-      if (error) throw error;
-
-      toast.success("Profile saved! Generating AI recommendations...");
-      navigate("/scholarships");
-    } catch (error: any) {
-      toast.error(error.message || "Error saving profile");
-    } finally {
-      setLoading(false);
-    }
+  const fetchUnreadCount = async (userId: string) => {
+    const { count } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("is_read", false);
+    
+    setUnreadCount(count || 0);
   };
 
-  const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const checkAdminStatus = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    
+    setIsAdmin(!!data);
   };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  const navLinks = [
+    { href: "/", label: "Home" },
+    { href: "/scholarships", label: "Scholarships", protected: true },
+    { href: "/marketplace", label: "Marketplace" },
+    { href: "/testimonials", label: "Feedback" },
+    { href: "/contact", label: "Contact" },
+  ];
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      
-      <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Create Your Profile</h1>
-            <p className="text-muted-foreground">
-              Tell us about yourself to get personalized scholarship recommendations
-            </p>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="bg-gradient-to-br from-primary to-primary-glow p-2 rounded-lg group-hover:shadow-lg transition-shadow">
+              <GraduationCap className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Scholarmach
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              (!link.protected || user) && (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+                >
+                  {link.label}
+                </Link>
+              )
+            ))}
+          </div>
+        
+          <div className="p-2 bg-transparent  text-black dark:text-gray-200" 
+          >
+            <button 
+              onClick={changeTheme}
+              className="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+              >
+                 {dark === true ? <Sun className="h-4 w-4 hover:text-yellow-500" /> : <Moon className="h-4 w-4 hover:text-gray-800" />}
+                      
+
+            </button>
+
           </div>
 
-          <div className="mb-8">
-            <div className="flex justify-between items-center">
-              {[1, 2, 3].map((s) => (
-                <div key={s} className="flex-1 flex items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                      step >= s
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {s}
-                  </div>
-                  {s < 3 && (
-                    <div
-                      className={`flex-1 h-1 mx-2 ${
-                        step > s ? "bg-primary" : "bg-muted"
-                      }`}
-                    />
+          {/* Desktop Auth */}
+          <div className="hidden md:flex items-center gap-4">
+            {user ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="relative"
+                  onClick={() => navigate("/notifications")}
+                >
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Badge>
                   )}
-                </div>
+                </Button>
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="h-4 w-4" />
+                    Account
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate("/admin")}>
+                      <LayoutDashboard className="h-4 w-4 mr-2" />
+                      Admin Panel
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+                  Login
+                </Button>
+                <Button size="sm" onClick={() => navigate("/auth")}>
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="md:hidden py-4 animate-fade-in">
+            <div className="flex flex-col gap-4">
+              {navLinks.map((link) => (
+                (!link.protected || user) && (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                )
               ))}
+              <div className="border-t border-border pt-4 flex flex-col gap-2">
+                {user ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="relative justify-start"
+                      onClick={() => {
+                        navigate("/notifications");
+                        setIsOpen(false);
+                      }}
+                    >
+                      <Bell className="h-4 w-4 mr-2" />
+                      Notifications
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </Badge>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigate("/dashboard");
+                        setIsOpen(false);
+                      }}
+                    >
+                      Dashboard
+                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigate("/admin");
+                          setIsOpen(false);
+                        }}
+                      >
+                        Admin Panel
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigate("/auth");
+                        setIsOpen(false);
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        navigate("/auth");
+                        setIsOpen(false);
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {step === 1 && "Personal Information"}
-                {step === 2 && "Academic Background"}
-                {step === 3 && "Scholarship Preferences"}
-              </CardTitle>
-              <CardDescription>
-                Step {step} of 3
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {step === 1 && (
-                  <>
-                    <div>
-                      <Label htmlFor="full_name">Full Name *</Label>
-                      <Input
-                        id="full_name"
-                        value={formData.full_name}
-                        onChange={(e) => updateField("full_name", e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="age">Age *</Label>
-                      <Input
-                        id="age"
-                        type="number"
-                        value={formData.age}
-                        onChange={(e) => updateField("age", e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="origin_country">Country of Origin *</Label>
-                      <Input
-                        id="origin_country"
-                        value={formData.origin_country}
-                        onChange={(e) => updateField("origin_country", e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="target_country">Target Country *</Label>
-                      <Input
-                        id="target_country"
-                        value={formData.target_country}
-                        onChange={(e) => updateField("target_country", e.target.value)}
-                        required
-                      />
-                    </div>
-                  </>
-                )}
-
-                {step === 2 && (
-                  <>
-                    <div>
-                      <Label htmlFor="field_of_study">Field of Study *</Label>
-                      <Input
-                        id="field_of_study"
-                        value={formData.field_of_study}
-                        onChange={(e) => updateField("field_of_study", e.target.value)}
-                        placeholder="e.g., Computer Science, Medicine"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="education_level">Education Level *</Label>
-                      <Select
-                        value={formData.education_level}
-                        onValueChange={(v) => updateField("education_level", v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="high_school">High School</SelectItem>
-                          <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                          <SelectItem value="masters">Master's</SelectItem>
-                          <SelectItem value="phd">PhD</SelectItem>
-                          <SelectItem value="postdoc">Postdoc</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="gpa">GPA (0-4 scale) *</Label>
-                      <Input
-                        id="gpa"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="4"
-                        value={formData.gpa}
-                        onChange={(e) => updateField("gpa", e.target.value)}
-                        required
-                      />
-                    </div>
-                  </>
-                )}
-
-                {step === 3 && (
-                  <>
-                    <div>
-                      <Label htmlFor="scholarship_type">Scholarship Type *</Label>
-                      <Select
-                        value={formData.scholarship_type}
-                        onValueChange={(v) => updateField("scholarship_type", v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="full">Full Scholarship</SelectItem>
-                          <SelectItem value="partial">Partial Scholarship</SelectItem>
-                          <SelectItem value="travel">Travel Grant</SelectItem>
-                          <SelectItem value="research">Research Funding</SelectItem>
-                          <SelectItem value="merit">Merit-Based</SelectItem>
-                          <SelectItem value="need_based">Need-Based</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="finance_type">Financing Preference</Label>
-                      <Input
-                        id="finance_type"
-                        value={formData.finance_type}
-                        onChange={(e) => updateField("finance_type", e.target.value)}
-                        placeholder="e.g., Full tuition, Living expenses"
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="flex gap-4 pt-4">
-                  {step > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep(step - 1)}
-                      className="flex-1"
-                    >
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Previous
-                    </Button>
-                  )}
-                  {step < 3 ? (
-                    <Button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setStep(step + 1);
-                      }}
-                      className="flex-1"
-                    >
-                      Next
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button type="submit" disabled={loading} className="flex-1">
-                      {loading ? "Saving..." : "Complete Profile"}
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+        )}
+      
       </div>
-
-      <Footer />
-    </div>
+    </nav>
   );
 }
