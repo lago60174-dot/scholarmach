@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sun, Moon } from "lucide-react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,6 +19,18 @@ export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+   const [dark, setDark] = useState(false);
+  const changeTheme = (()=>{
+    if(dark === false){
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme','dark');
+      setDark(true);
+    }else{
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme','light');
+      setDark(false);
+    }
+  })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -102,6 +115,19 @@ export default function Navbar() {
                 </Link>
               )
             ))}
+          </div>
+        
+          <div className="p-2 bg-transparent  text-black dark:text-gray-200" 
+          >
+            <button 
+              onClick={changeTheme}
+              className="p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+              >
+                 {dark === true ? <Sun className="h-4 w-4 hover:text-yellow-500" /> : <Moon className="h-4 w-4 hover:text-gray-800" />}
+                      
+
+            </button>
+
           </div>
 
           {/* Desktop Auth */}
@@ -259,6 +285,7 @@ export default function Navbar() {
             </div>
           </div>
         )}
+      
       </div>
     </nav>
   );
