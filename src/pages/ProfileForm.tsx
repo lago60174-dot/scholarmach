@@ -281,8 +281,8 @@ export default function ProfileForm() {
                     <Button
                       type="button"
                       variant="outline"
-                      //onClick={() => setStep(step - 1)}
-                      onClick={() => setStep((s) => s - 1)}
+                      onClick={() => setStep(step - 1)}
+                      // onClick={() => setStep((s) => s - 1)}
 
                       className="flex-1"
                     >
